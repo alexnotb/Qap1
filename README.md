@@ -70,3 +70,5 @@ Workflow: `.github/workflows/maven.yml` runs on every Pull Request to `main`:
 - If GitHub Actions fails on JDK, ensure Java 17 is selected in the workflow.
 - If tests don’t discover, verify package names and that test classes end with `*Test`.
 
+
+Trigger CI: 2025-10-04T10:18:17.7566548-02:30
