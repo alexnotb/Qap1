@@ -1,67 +1,72 @@
+# Simple Banking Application (SDAT & DevOps — QAP 1)
 
-# Simple Banking Application
-
-SDAT & DevOps **QAP 1** — Java + Maven project with **JUnit 5** tests and **GitHub Actions** CI.
+A minimal Java application showcasing clean code, JUnit 5 tests, and GitHub Actions CI.
 
 ## Features
-- Create account with holder name and initial balance
-- Deposit and withdraw with validations
-- Check current balance
+- Account creation with initial balance
+- Deposit & withdrawal with validation
+- Transfer between accounts
+- Custom exceptions for common error scenarios
 
 ## Project Structure
 ```
-simple-banking-app/
-  ├─ .github/workflows/maven.yml     # GitHub Actions to run tests on PR
-  ├─ src/main/java/com/example/bank  # Application source
-  ├─ src/test/java/com/example/bank  # Unit tests (JUnit 5)
-  ├─ pom.xml                         # Maven config & dependencies
-  └─ README.md
+src/
+  main/java/com/example/bank/
+    Account.java
+    BankService.java
+    AccountNotFoundException.java
+    InvalidAmountException.java
+    InsufficientFundsException.java
+  test/java/com/example/bank/
+    AccountTest.java
+    BankServiceTest.java
+.github/workflows/maven.yml
+pom.xml
 ```
 
-## Run Locally
+## How to Run Locally
 ```bash
-mvn -v           # ensure Maven is installed
-mvn test         # run tests
-mvn -q -DskipTests package
+# run tests
+mvn test
+
+# package (runs tests)
+mvn -B package
 ```
 
-## Clean Code Examples (from this repo)
-1) **Small, focused classes & methods**: `Account` encapsulates state and invariants; `BankService` orchestrates operations.
-2) **Meaningful names**: `deposit`, `withdraw`, `getBalance`, `InsufficientFundsException` — self-explanatory semantics.
-3) **Defensive validation**: constructors and methods check preconditions (null/blank names, negative amounts), throwing clear exceptions.
-4) **Immutability where possible**: account `id` and `holderName` are final; only balance mutates in a controlled way.
-5) **Single responsibility**: `Main` only handles a simple CLI demo; business logic stays out of the UI.
+## GitHub Actions
+Workflow: `.github/workflows/maven.yml` runs on every Pull Request to `main`:
+- Checks out code
+- Sets up JDK 17 (Temurin)
+- Builds project with Maven (runs tests)
+
+## Clean Code Examples (3+)
+1. **Single Responsibility (Account)** — balance operations live in `Account` and only validate amounts; business coordination (e.g., transfers) lives in `BankService`.
+2. **Meaningful Names** — `createAccount`, `getAccount`, `transfer`, `InvalidAmountException`, etc. self-document their intent.
+3. **Fail Fast with Custom Exceptions** — invalid/insufficient amounts and missing accounts use domain exceptions (`InvalidAmountException`, `InsufficientFundsException`, `AccountNotFoundException`) rather than generic ones.
+4. **Immutability of Identity** — `Account#id` and `owner` are `final` and never change; only `balance` mutates in a controlled manner.
+5. **Use of BigDecimal** — monetary values use `BigDecimal` to avoid floating point inaccuracies.
 
 ## Tests
-- `AccountTest` covers positive and negative scenarios with a mix of assertions:
-  - deposit increases balance
-  - withdraw decreases balance
-  - withdrawing more than balance throws `InsufficientFundsException`
-  - negative/zero amounts are rejected
-
-Run:
-```bash
-mvn test
-```
+- `AccountTest`
+  - deposit increases balance (positive)
+  - withdraw decreases balance (positive)
+  - withdraw throws on insufficient funds (negative)
+- `BankServiceTest`
+  - transfer moves funds from A to B (positive)
+  - transfer with non-existing account throws (negative)
+  - transfer with non-positive amount throws (negative)
 
 ## Dependencies
-- **JUnit 5 (org.junit.jupiter:junit-jupiter)** — test framework (from Maven Central).
-- Maven Surefire Plugin to run JUnit 5 tests.
+- JUnit 5 (`org.junit.jupiter:junit-jupiter:${junit.jupiter.version}`) — from Maven Central
+- `maven-surefire-plugin` to run JUnit 5
 
-## GitHub Actions (CI)
-Workflow triggers on **pull_request** to run `mvn -B -ntp test`.  
-See `.github/workflows/maven.yml`.
+## Trunk/Dev Workflow (suggested)
+1. Create a feature branch
+2. Commit small changes frequently with clear messages
+3. Open a Pull Request into `main`
+4. CI runs tests automatically on PR
 
-## Dev/Trunk Based Workflow
-- Create feature branches from `main` (e.g., `feat/deposit-limits`).
-- Commit small, frequent changes.
-- Open a **Pull Request** — CI will run tests automatically.
-- Merge via PR to keep `main` green.
+## Notes / Troubleshooting
+- If GitHub Actions fails on JDK, ensure Java 17 is selected in the workflow.
+- If tests don’t discover, verify package names and that test classes end with `*Test`.
 
-## Problems & Notes (to edit)
-- If CI fails due to environment/Java version, we pin JDK 17 in the workflow.
-- Add any blockers you hit here during submission.
-
----
-
-**How it works:** Each `Account` maintains its balance; `BankService` provides simple factory and operations.

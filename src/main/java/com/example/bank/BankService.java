@@ -1,42 +1,38 @@
-
 package com.example.bank;
 
 import java.math.BigDecimal;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Application service containing business rules:
- *  - deposit/withdraw validate amounts (> 0)
- *  - withdraw cannot exceed balance
- */
 public class BankService {
+    private final Map<String, Account> accounts = new HashMap<>();
 
-    public Account createAccount(String holderName, BigDecimal initialBalance) {
-        return new Account(holderName, initialBalance);
-    }
-
-    public void deposit(Account account, BigDecimal amount) {
-        requireAccount(account);
-        requirePositive(amount);
-        account.increase(amount);
-    }
-
-    public void withdraw(Account account, BigDecimal amount) {
-        requireAccount(account);
-        requirePositive(amount);
-        if (account.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFundsException("Insufficient funds");
+    public Account createAccount(String id, String owner, BigDecimal openingBalance) {
+        if (accounts.containsKey(id)) {
+            throw new IllegalArgumentException("Account already exists: " + id);
         }
-        account.decrease(amount);
+        Account acc = new Account(id, owner, openingBalance);
+        accounts.put(id, acc);
+        return acc;
     }
 
-    private void requireAccount(Account account) {
-        if (account == null) throw new IllegalArgumentException("Account must not be null");
+    public Account getAccount(String id) {
+        Account acc = accounts.get(id);
+        if (acc == null) throw new AccountNotFoundException("Account not found: " + id);
+        return acc;
     }
 
-    private void requirePositive(BigDecimal amount) {
-        if (amount == null) throw new IllegalArgumentException("Amount must not be null");
-        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero");
-        }
+    public void transfer(String fromId, String toId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0)
+            throw new InvalidAmountException("Transfer must be > 0");
+        Account from = getAccount(fromId);
+        Account to = getAccount(toId);
+        from.withdraw(amount);
+        to.deposit(amount);
+    }
+
+    public Collection<Account> getAllAccounts() {
+        return accounts.values();
     }
 }
